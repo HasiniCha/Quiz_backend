@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Question Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .question {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .question p {
+            margin: 5px 0;
+        }
+        .option-button {
+            margin: 5px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .option-button.correct {
+            background-color: #28a745;
+        }
+        .option-button.incorrect {
+            background-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Question Management</h1>
+
+    <h2>All Questions</h2>
+    <div id="questions"></div>
+
+    <h2>Add a New Question</h2>
+    <form id="addQuestionForm">
+        <div class="form-group">
+            <label for="questionId">Question ID:</label>
+            <input type="number" id="questionId" name="questionId" required>
+        </div>
+        <div class="form-group">
+            <label for="question">Question:</label>
+            <input type="text" id="question" name="question" required>
+        </div>
+        <div class="form-group">
+            <label for="optionA">Option A:</label>
+            <input type="text" id="optionA" name="optionA">
+        </div>
+        <div class="form-group">
+            <label for="optionB">Option B:</label>
+            <input type="text" id="optionB" name="optionB">
+        </div>
+        <div class="form-group">
+            <label for="optionC">Option C:</label>
+            <input type="text" id="optionC" name="optionC">
+        </div>
+        <div class="form-group">
+            <label for="optionD">Option D:</label>
+            <input type="text" id="optionD" name="optionD">
+        </div>
+        <div class="form-group">
+            <label for="answer">Answer:</label>
+            <input type="text" id="answer" name="answer" required>
+        </div>
+        <button type="submit">Add Question</button>
+    </form>
+
+
+    <h2>Update a Question</h2>
+    <form id="updateQuestionForm">
+        <div class="form-group">
+            <label for="updateId">Question ID:</label>
+            <input type="number" id="updateId" name="updateId" required>
+        </div>
+        <div class="form-group">
+            <label for="updateQuestion">New Question:</label>
+            <input type="text" id="updateQuestion" name="updateQuestion">
+        </div>
+        <div class="form-group">
+            <label for="updateOptionA">New Option A:</label>
+            <input type="text" id="updateOptionA" name="updateOptionA">
+        </div>
+        <div class="form-group">
+            <label for="updateOptionB">New Option B:</label>
+            <input type="text" id="updateOptionB" name="updateOptionB">
+        </div>
+        <div class="form-group">
+            <label for="updateOptionC">New Option C:</label>
+            <input type="text" id="updateOptionC" name="updateOptionC">
+        </div>
+        <div class="form-group">
+            <label for="updateOptionD">New Option D:</label>
+            <input type="text" id="updateOptionD" name="updateOptionD">
+        </div>
+        <div class="form-group">
+            <label for="updateAnswer">New Answer:</label>
+            <input type="text" id="updateAnswer" name="updateAnswer">
+        </div>
+        <button type="submit">Update Question</button>
+    </form>
+
+    <h2>Delete a Question</h2>
+    <form id="deleteQuestionForm">
+        <div class="form-group">
+            <label for="deleteId">Question ID:</label>
+            <input type="number" id="deleteId" name="deleteId" required>
+        </div>
+        <button type="submit">Delete Question</button>
+    </form>
+</div>
+
+<script>
+    function fetchQuestions() {
+      fetch('/question/AllQuestions')
+          .then(response => response.json())
+          .then(data => {
+              const questionsDiv = document.getElementById('questions');
+              questionsDiv.innerHTML = ''; // Clear previous content
+              data.forEach(question => {
+                  const questionDiv = document.createElement('div');
+                  questionDiv.className = 'question';
+                  questionDiv.innerHTML = `
+                      <p><strong>ID:</strong> ${question.id}</p>
+                      <p><strong>Question:</strong> ${question.question}</p>
+                      <p><strong>Option A:</strong> <button class="option-button" data-answer="A">${question.optionA || 'N/A'}</button></p>
+                      <p><strong>Option B:</strong> <button class="option-button" data-answer="B">${question.optionB || 'N/A'}</button></p>
+                      <p><strong>Option C:</strong> <button class="option-button" data-answer="C">${question.optionC || 'N/A'}</button></p>
+                      <p><strong>Option D:</strong> <button class="option-button" data-answer="D">${question.optionD || 'N/A'}</button></p>
+                      <p><strong>Answer:</strong> <span id="answer-${question.id}">${question.answer}</span></p>
+                  `;
+                  questionsDiv.appendChild(questionDiv);
+              });
+              // Add event listeners to buttons
+              document.querySelectorAll('.option-button').forEach(button => {
+                  button.addEventListener('click', handleOptionClick);
+              });
+          });
+  }
+
+  function handleOptionClick(event) {
+      const selectedButton = event.target;
+      const selectedAnswer = selectedButton.dataset.answer;
+      const questionDiv = selectedButton.closest('.question');
+      const correctAnswer = questionDiv.querySelector('#answer-' + selectedButton.closest('.question').querySelector('strong').textContent).textContent;
+
+      // Reset button styles
+      questionDiv.querySelectorAll('.option-button').forEach(button => {
+          button.classList.remove('correct', 'incorrect');
+      });
+
+      // Highlight the selected button
+      if (selectedAnswer === correctAnswer) {
+          selectedButton.classList.add('correct');
+      } else {
+          selectedButton.classList.add('incorrect');
+      }
+  }
+
+  document.addEventListener('DOMContentLoaded', fetchQuestions);
+
+ // Function to add a new question
+function addQuestion(event) {
+  event.preventDefault();
+
+  // Retrieve the values from the form
+  const idInput = document.getElementById('questionId').value;
+  const questionInput = document.getElementById('question').value;
+  const optionAInput = document.getElementById('optionA').value;
+  const optionBInput = document.getElementById('optionB').value;
+  const optionCInput = document.getElementById('optionC').value;
+  const optionDInput = document.getElementById('optionD').value;
+  const answerInput = document.getElementById('answer').value;
+
+  // Send the POST request with the id included in the body
+  fetch('/question/add', {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+          id: idInput,            // Include the id in the request body
+          question: questionInput,
+          optionA: optionAInput,
+          optionB: optionBInput,
+          optionC: optionCInput,
+          optionD: optionDInput,
+          answer: answerInput
+      })
+  })
+  .then(response => response.json())
+  .then(data => {
+      console.log('Question added:', data);
+      fetchQuestions(); // Refresh the list of questions
+  });
+}
+
+  // Function to update a question
+  function updateQuestion(event) {
+      event.preventDefault();
+      const idInput = document.getElementById('updateId').value;
+      const updateQuestionInput = document.getElementById('updateQuestion').value;
+      const updateOptionAInput = document.getElementById('updateOptionA').value;
+      const updateOptionBInput = document.getElementById('updateOptionB').value;
+      const updateOptionCInput = document.getElementById('updateOptionC').value;
+      const updateOptionDInput = document.getElementById('updateOptionD').value;
+      const updateAnswerInput = document.getElementById('updateAnswer').value;
+
+      fetch(`/question/update/${idInput}`, {
+          method: 'PUT',
+          headers: {
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+              question: updateQuestionInput,
+              optionA: updateOptionAInput,
+              optionB: updateOptionBInput,
+              optionC: updateOptionCInput,
+              optionD: updateOptionDInput,
+              answer: updateAnswerInput
+          })
+      })
+      .then(response => response.json())
+      .then(data => {
+          console.log('Question updated:', data);
+          fetchQuestions(); // Refresh the list of questions
+      });
+  }
+
+  // Function to delete a question
+  function deleteQuestion(event) {
+      event.preventDefault();
+      const idInput = document.getElementById('deleteId').value;
+
+      fetch(`/question/delete/${idInput}`, {
+          method: 'DELETE'
+      })
+      .then(() => {
+          console.log('Question deleted');
+          fetchQuestions(); // Refresh the list of questions
+      });
+  }
+
+  // Fetch questions when the page loads
+  document.addEventListener('DOMContentLoaded', fetchQuestions);
+
+  // Add event listeners to the forms
+  document.getElementById('addQuestionForm').addEventListener('submit', addQuestion);
+  document.getElementById('updateQuestionForm').addEventListener('submit', updateQuestion);
+  document.getElementById('deleteQuestionForm').addEventListener('submit', deleteQuestion);
+</script>
+</body>
+</html>
