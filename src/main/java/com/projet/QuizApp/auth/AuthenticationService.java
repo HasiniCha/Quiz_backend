@@ -14,9 +14,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Service;
@@ -51,22 +53,40 @@ public class AuthenticationService {
   }
 
   public AuthenticationResponse authenticate(AuthenticationRequest request) {
-    authenticationManager.authenticate(
-        new UsernamePasswordAuthenticationToken(
-            request.getEmail(),
-            request.getPassword()
-        )
-    );
-    var user = repository.findByEmail(request.getEmail())
-        .orElseThrow();
-    var jwtToken = jwtService.generateToken(user);
-    var refreshToken = jwtService.generateRefreshToken(user);
-    revokeAllUserTokens(user);
-    saveUserToken(user, jwtToken);
-    return AuthenticationResponse.builder()
-        .accessToken(jwtToken)
-            .refreshToken(refreshToken)
-        .build();
+    try {
+      // Authenticate user
+      authenticationManager.authenticate(
+              new UsernamePasswordAuthenticationToken(
+                      request.getEmail(),
+                      request.getPassword()
+              )
+      );
+
+      // Fetch user from repository
+      var user = repository.findByEmail(request.getEmail())
+              .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + request.getEmail()));
+
+      // Generate tokens
+      var jwtToken = jwtService.generateToken(user);
+      var refreshToken = jwtService.generateRefreshToken(user);
+
+      // Revoke old tokens and save new token
+      revokeAllUserTokens(user);
+      saveUserToken(user, jwtToken);
+
+      // Return response with tokens
+      return AuthenticationResponse.builder()
+              .accessToken(jwtToken)
+              .refreshToken(refreshToken)
+              .build();
+
+    } catch (BadCredentialsException e) {
+      throw new AuthenticationFailedException("Invalid email or password");
+    } catch (UsernameNotFoundException e) {
+      throw new AuthenticationFailedException(e.getMessage());
+    } catch (Exception e) {
+      throw new AuthenticationFailedException("An error occurred during authentication: " + e.getMessage());
+    }
   }
 
   private void saveUserToken(User user, String jwtToken) {

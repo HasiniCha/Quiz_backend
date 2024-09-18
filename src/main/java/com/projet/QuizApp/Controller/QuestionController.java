@@ -16,11 +16,16 @@ public class QuestionController {
     private QuestionService questionService;
 
     // Get all questions
+    @CrossOrigin(origins = "http://localhost:4200")
     @GetMapping("/AllQuestions")
     public List<ProgrammingQuestion> getAllQuestions() {
         return questionService.getAllQuestions();
     }
-
+    @CrossOrigin(origins = "http://localhost:4200")
+    @GetMapping("/list/{list_id}")
+    public List<ProgrammingQuestion> getQuestionsByListId(@PathVariable Long list_id) {
+        return questionService.getQuestionsByListId(list_id);
+    }
     // Get question by ID
     @GetMapping("/{id}")
     public ProgrammingQuestion getQuestionById(@PathVariable("id") Long id) {
@@ -31,6 +36,7 @@ public class QuestionController {
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/add")
     public ProgrammingQuestion addQuestion(@RequestBody ProgrammingQuestion programmingQuestion) {
+        System.out.println(programmingQuestion);
         return questionService.addQuestion(programmingQuestion);
     }
 

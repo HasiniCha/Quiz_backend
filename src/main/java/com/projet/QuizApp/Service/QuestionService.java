@@ -2,6 +2,7 @@ package com.projet.QuizApp.Service;
 
 import com.projet.QuizApp.Dao.QuestionDao;
 import com.projet.QuizApp.ProgrammingQuestion;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +23,10 @@ public class QuestionService {
     // Retrieve a specific question by ID
     public ProgrammingQuestion getQuestionById(Long id) {
         Optional<ProgrammingQuestion> question = questionDao.findById(id);
-        return question.orElse(null); // Return the question or null if not found
+        return question.orElse(null);
+    }
+    public List<ProgrammingQuestion> getQuestionsByListId(Long list_id) {
+        return questionDao.findByListId(list_id);
     }
 
     // Add a new question
@@ -49,7 +53,7 @@ public class QuestionService {
             question.setAnswer(updatedQuestion.getAnswer());
             return questionDao.save(question);
         } else {
-            return null; // Or throw an exception if the question doesn't exist
+            return null;
         }
     }
 
@@ -57,4 +61,10 @@ public class QuestionService {
     public void deleteQuestion(Long id) {
         questionDao.deleteById(id);
     }
+
+    public void deleteQuestionsByListId(Long listId) {
+
+        questionDao.deleteByListId(listId);
+    }
+
 }

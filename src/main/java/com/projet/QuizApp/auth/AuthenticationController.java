@@ -21,14 +21,14 @@ public class AuthenticationController {
     // Register the user by calling the service
     return service.register(request);  // Returns the response generated from the service
   }
-
+  @CrossOrigin(origins = "http://localhost:4200")
   @PostMapping("/authenticate")
   public ResponseEntity<AuthenticationResponse> authenticate(
       @RequestBody AuthenticationRequest request
   ) {
     return ResponseEntity.ok(service.authenticate(request));
   }
-
+  @CrossOrigin(origins = "http://localhost:4200")
   @PostMapping("/refresh-token")
   public void refreshToken(
       HttpServletRequest request,
